@@ -130,23 +130,90 @@ $user = $result->fetch_assoc();
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Profile - CMS</title>
-
-    <!-- Google Font: Source Sans Pro -->
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
-    <!-- Font Awesome -->
+    <title>Profile - SimpleCMS</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:400,500,700&display=swap">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <!-- AdminLTE CSS -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
-    <!-- Custom CSS -->
     <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: linear-gradient(120deg, #e3f2fd 0%, #bbdefb 100%);
+            min-height: 100vh;
+        }
+        .main-header, .main-footer {
+            background: #1976d2 !important;
+            color: #fff !important;
+            border: none;
+        }
+        .main-sidebar {
+            background: #1565c0 !important;
+        }
+        .brand-link {
+            background: #1976d2 !important;
+            color: #fff !important;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+        .sidebar .user-panel {
+            /* background: #e3f2fd; */
+            background: transparent;
+            border-radius: 12px;
+            margin-bottom: 18px;
+            box-shadow: 0 2px 8px rgba(25, 118, 210, 0.08);
+        }
+        .sidebar .user-panel .image img {
+            border-radius: 50%;
+            border: 2px solid #1976d2;
+        }
+        .sidebar .nav-link.active, .sidebar .nav-link:hover {
+            background: #1976d2 !important;
+            color: #fff !important;
+            border-radius: 8px;
+        }
+        .sidebar .nav-link {
+            color: #e3f2fd !important;
+            font-weight: 500;
+            margin-bottom: 4px;
+            transition: background 0.2s;
+        }
+        .content-wrapper {
+            background: transparent;
+        }
+        .card, .btn, .form-control, .custom-file-input, .custom-file-label, .note-editor {
+            border-radius: 18px !important;
+            box-shadow: 0 4px 24px rgba(25, 118, 210, 0.10);
+            border: none;
+        }
+        .btn-primary, .btn-success, .btn-danger, .btn-info {
+            background: #1976d2;
+            color: #fff;
+            border: none;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+        .btn-primary:hover, .btn-success:hover, .btn-danger:hover, .btn-info:hover {
+            background: #1565c0;
+        }
+        .main-footer {
+            background: #1976d2 !important;
+            color: #fff !important;
+            border-top: none;
+            border-radius: 0 0 18px 18px;
+        }
+        h1, h3, h2 {
+            color: #1976d2;
+            font-weight: 700;
+        }
+        label {
+            color: #1976d2;
+            font-weight: 500;
+        }
         .profile-image {
             width: 150px;
             height: 150px;
             object-fit: cover;
             border-radius: 50%;
             border: 3px solid #fff;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            box-shadow: 0 0 10px rgba(25, 118, 210, 0.15);
         }
         .profile-image-container {
             text-align: center;
@@ -155,7 +222,17 @@ $user = $result->fetch_assoc();
         .profile-image-container .btn {
             margin-top: 10px;
         }
+        @media (max-width: 900px) {
+            .content-header h1 {
+                font-size: 1.5rem;
+            }
+        }
+        .sidebar .user-panel .info a {
+            color: #fff !important;
+        }
     </style>
+    <!-- AdminLTE CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
 </head>
 <body class="hold-transition sidebar-mini">
 <div class="wrapper">

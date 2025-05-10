@@ -250,8 +250,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
     </div>
     <div class="login-illustration">
-        <!-- Placeholder SVG illustration -->
-        <img src="https://undraw.co/api/illustrations/2e6e7e7e-7e7e-4e7e-8e7e-7e7e7e7e7e7e" alt="Login Illustration">
+        <!-- Ganti dengan gambar lokal -->
+        <img src="asset/login-illustration.jpg" alt="Login Illustration">
     </div>
 </div>
 </body>
