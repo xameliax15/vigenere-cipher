@@ -8,20 +8,17 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 
-// Handle post deletion
-if (isset($_POST['delete_post'])) {
-    $post_id = $_POST['post_id'];
-    $sql = "DELETE FROM posts WHERE id = ?";
+// Handle page deletion
+if (isset($_POST['delete_page'])) {
+    $page_id = $_POST['page_id'];
+    $sql = "DELETE FROM pages WHERE id = ?";
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("i", $post_id);
+    $stmt->bind_param("i", $page_id);
     $stmt->execute();
 }
 
-// Get all posts
-$sql = "SELECT p.*, u.username as author_name 
-        FROM posts p 
-        LEFT JOIN users u ON p.author_id = u.id 
-        ORDER BY p.created_at DESC";
+// Get all pages
+$sql = "SELECT * FROM pages ORDER BY created_at DESC";
 $result = $conn->query($sql);
 ?>
 
@@ -30,7 +27,7 @@ $result = $conn->query($sql);
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Posts Management - CMS</title>
+    <title>Pages Management - CMS</title>
 
     <!-- Google Font: Source Sans Pro -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
@@ -81,13 +78,13 @@ $result = $conn->query($sql);
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="posts.php" class="nav-link active">
+                        <a href="posts.php" class="nav-link">
                             <i class="nav-icon fas fa-file-alt"></i>
                             <p>Posts</p>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="pages.php" class="nav-link">
+                        <a href="pages.php" class="nav-link active">
                             <i class="nav-icon fas fa-file"></i>
                             <p>Pages</p>
                         </a>
@@ -118,11 +115,11 @@ $result = $conn->query($sql);
             <div class="container-fluid">
                 <div class="row mb-2">
                     <div class="col-sm-6">
-                        <h1 class="m-0">Posts Management</h1>
+                        <h1 class="m-0">Pages Management</h1>
                     </div>
                     <div class="col-sm-6">
-                        <a href="post_edit.php" class="btn btn-primary float-right">
-                            <i class="fas fa-plus"></i> Add New Post
+                        <a href="page_edit.php" class="btn btn-primary float-right">
+                            <i class="fas fa-plus"></i> Add New Page
                         </a>
                     </div>
                 </div>
@@ -134,34 +131,34 @@ $result = $conn->query($sql);
             <div class="container-fluid">
                 <div class="card">
                     <div class="card-body">
-                        <table id="posts-table" class="table table-bordered table-striped">
+                        <table id="pages-table" class="table table-bordered table-striped">
                             <thead>
                                 <tr>
                                     <th>Title</th>
-                                    <th>Author</th>
+                                    <th>Slug</th>
                                     <th>Status</th>
                                     <th>Created</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php while ($post = $result->fetch_assoc()): ?>
+                                <?php while ($page = $result->fetch_assoc()): ?>
                                 <tr>
-                                    <td><?php echo htmlspecialchars($post['title']); ?></td>
-                                    <td><?php echo htmlspecialchars($post['author_name']); ?></td>
+                                    <td><?php echo htmlspecialchars($page['title']); ?></td>
+                                    <td><?php echo htmlspecialchars($page['slug']); ?></td>
                                     <td>
-                                        <span class="badge badge-<?php echo $post['status'] === 'published' ? 'success' : 'warning'; ?>">
-                                            <?php echo ucfirst($post['status']); ?>
+                                        <span class="badge badge-<?php echo $page['status'] === 'published' ? 'success' : 'warning'; ?>">
+                                            <?php echo ucfirst($page['status']); ?>
                                         </span>
                                     </td>
-                                    <td><?php echo date('Y-m-d H:i', strtotime($post['created_at'])); ?></td>
+                                    <td><?php echo date('Y-m-d H:i', strtotime($page['created_at'])); ?></td>
                                     <td>
-                                        <a href="post_edit.php?id=<?php echo $post['id']; ?>" class="btn btn-sm btn-info">
+                                        <a href="page_edit.php?id=<?php echo $page['id']; ?>" class="btn btn-sm btn-info">
                                             <i class="fas fa-edit"></i>
                                         </a>
-                                        <form action="posts.php" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this post?');">
-                                            <input type="hidden" name="post_id" value="<?php echo $post['id']; ?>">
-                                            <button type="submit" name="delete_post" class="btn btn-sm btn-danger">
+                                        <form action="pages.php" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this page?');">
+                                            <input type="hidden" name="page_id" value="<?php echo $page['id']; ?>">
+                                            <button type="submit" name="delete_page" class="btn btn-sm btn-danger">
                                                 <i class="fas fa-trash"></i>
                                             </button>
                                         </form>
@@ -196,7 +193,7 @@ $result = $conn->query($sql);
 <script src="https://cdn.datatables.net/1.10.24/js/dataTables.bootstrap4.min.js"></script>
 <script>
 $(document).ready(function() {
-    $('#posts-table').DataTable({
+    $('#pages-table').DataTable({
         "paging": true,
         "lengthChange": true,
         "searching": true,

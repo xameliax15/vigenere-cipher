@@ -2,26 +2,37 @@
 session_start();
 require_once 'config/database.php';
 
-// Check if user is logged in
-if (!isset($_SESSION['user_id'])) {
-    header('Location: login.php');
+// Check if user is logged in and is admin
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+    header('Location: index.php');
     exit();
 }
 
-// Handle post deletion
-if (isset($_POST['delete_post'])) {
-    $post_id = $_POST['post_id'];
-    $sql = "DELETE FROM posts WHERE id = ?";
+// Handle user deletion
+if (isset($_POST['delete_user'])) {
+    $user_id = $_POST['user_id'];
+    // Don't allow deleting the last admin
+    $sql = "SELECT COUNT(*) as admin_count FROM users WHERE role = 'admin'";
+    $result = $conn->query($sql);
+    $admin_count = $result->fetch_assoc()['admin_count'];
+    
+    $sql = "SELECT role FROM users WHERE id = ?";
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("i", $post_id);
+    $stmt->bind_param("i", $user_id);
     $stmt->execute();
+    $result = $stmt->get_result();
+    $user = $result->fetch_assoc();
+    
+    if ($admin_count > 1 || $user['role'] !== 'admin') {
+        $sql = "DELETE FROM users WHERE id = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("i", $user_id);
+        $stmt->execute();
+    }
 }
 
-// Get all posts
-$sql = "SELECT p.*, u.username as author_name 
-        FROM posts p 
-        LEFT JOIN users u ON p.author_id = u.id 
-        ORDER BY p.created_at DESC";
+// Get all users
+$sql = "SELECT * FROM users ORDER BY created_at DESC";
 $result = $conn->query($sql);
 ?>
 
@@ -30,7 +41,7 @@ $result = $conn->query($sql);
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Posts Management - CMS</title>
+    <title>User Management - CMS</title>
 
     <!-- Google Font: Source Sans Pro -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
@@ -81,7 +92,7 @@ $result = $conn->query($sql);
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="posts.php" class="nav-link active">
+                        <a href="posts.php" class="nav-link">
                             <i class="nav-icon fas fa-file-alt"></i>
                             <p>Posts</p>
                         </a>
@@ -98,14 +109,12 @@ $result = $conn->query($sql);
                             <p>Media</p>
                         </a>
                     </li>
-                    <?php if ($_SESSION['role'] === 'admin'): ?>
                     <li class="nav-item">
-                        <a href="users.php" class="nav-link">
+                        <a href="users.php" class="nav-link active">
                             <i class="nav-icon fas fa-users"></i>
                             <p>Users</p>
                         </a>
                     </li>
-                    <?php endif; ?>
                 </ul>
             </nav>
         </div>
@@ -118,11 +127,11 @@ $result = $conn->query($sql);
             <div class="container-fluid">
                 <div class="row mb-2">
                     <div class="col-sm-6">
-                        <h1 class="m-0">Posts Management</h1>
+                        <h1 class="m-0">User Management</h1>
                     </div>
                     <div class="col-sm-6">
-                        <a href="post_edit.php" class="btn btn-primary float-right">
-                            <i class="fas fa-plus"></i> Add New Post
+                        <a href="user_edit.php" class="btn btn-primary float-right">
+                            <i class="fas fa-plus"></i> Add New User
                         </a>
                     </div>
                 </div>
@@ -134,37 +143,39 @@ $result = $conn->query($sql);
             <div class="container-fluid">
                 <div class="card">
                     <div class="card-body">
-                        <table id="posts-table" class="table table-bordered table-striped">
+                        <table id="users-table" class="table table-bordered table-striped">
                             <thead>
                                 <tr>
-                                    <th>Title</th>
-                                    <th>Author</th>
-                                    <th>Status</th>
+                                    <th>Username</th>
+                                    <th>Email</th>
+                                    <th>Role</th>
                                     <th>Created</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php while ($post = $result->fetch_assoc()): ?>
+                                <?php while ($user = $result->fetch_assoc()): ?>
                                 <tr>
-                                    <td><?php echo htmlspecialchars($post['title']); ?></td>
-                                    <td><?php echo htmlspecialchars($post['author_name']); ?></td>
+                                    <td><?php echo htmlspecialchars($user['username']); ?></td>
+                                    <td><?php echo htmlspecialchars($user['email']); ?></td>
                                     <td>
-                                        <span class="badge badge-<?php echo $post['status'] === 'published' ? 'success' : 'warning'; ?>">
-                                            <?php echo ucfirst($post['status']); ?>
+                                        <span class="badge badge-<?php echo $user['role'] === 'admin' ? 'danger' : ($user['role'] === 'editor' ? 'warning' : 'info'); ?>">
+                                            <?php echo ucfirst($user['role']); ?>
                                         </span>
                                     </td>
-                                    <td><?php echo date('Y-m-d H:i', strtotime($post['created_at'])); ?></td>
+                                    <td><?php echo date('Y-m-d H:i', strtotime($user['created_at'])); ?></td>
                                     <td>
-                                        <a href="post_edit.php?id=<?php echo $post['id']; ?>" class="btn btn-sm btn-info">
+                                        <a href="user_edit.php?id=<?php echo $user['id']; ?>" class="btn btn-sm btn-info">
                                             <i class="fas fa-edit"></i>
                                         </a>
-                                        <form action="posts.php" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this post?');">
-                                            <input type="hidden" name="post_id" value="<?php echo $post['id']; ?>">
-                                            <button type="submit" name="delete_post" class="btn btn-sm btn-danger">
+                                        <?php if ($user['id'] !== $_SESSION['user_id']): ?>
+                                        <form action="users.php" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this user?');">
+                                            <input type="hidden" name="user_id" value="<?php echo $user['id']; ?>">
+                                            <button type="submit" name="delete_user" class="btn btn-sm btn-danger">
                                                 <i class="fas fa-trash"></i>
                                             </button>
                                         </form>
+                                        <?php endif; ?>
                                     </td>
                                 </tr>
                                 <?php endwhile; ?>
@@ -196,7 +207,7 @@ $result = $conn->query($sql);
 <script src="https://cdn.datatables.net/1.10.24/js/dataTables.bootstrap4.min.js"></script>
 <script>
 $(document).ready(function() {
-    $('#posts-table').DataTable({
+    $('#users-table').DataTable({
         "paging": true,
         "lengthChange": true,
         "searching": true,

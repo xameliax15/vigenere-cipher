@@ -8,21 +8,53 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 
-// Handle post deletion
-if (isset($_POST['delete_post'])) {
-    $post_id = $_POST['post_id'];
-    $sql = "DELETE FROM posts WHERE id = ?";
+$page = [
+    'id' => '',
+    'title' => '',
+    'content' => '',
+    'slug' => '',
+    'status' => 'draft'
+];
+
+// If editing existing page
+if (isset($_GET['id'])) {
+    $page_id = $_GET['id'];
+    $sql = "SELECT * FROM pages WHERE id = ?";
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("i", $post_id);
+    $stmt->bind_param("i", $page_id);
     $stmt->execute();
+    $result = $stmt->get_result();
+    if ($result->num_rows === 1) {
+        $page = $result->fetch_assoc();
+    }
 }
 
-// Get all posts
-$sql = "SELECT p.*, u.username as author_name 
-        FROM posts p 
-        LEFT JOIN users u ON p.author_id = u.id 
-        ORDER BY p.created_at DESC";
-$result = $conn->query($sql);
+// Handle form submission
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $title = $_POST['title'];
+    $content = $_POST['content'];
+    $status = $_POST['status'];
+    $slug = strtolower(str_replace(' ', '-', $title));
+
+    if (isset($_POST['id']) && !empty($_POST['id'])) {
+        // Update existing page
+        $sql = "UPDATE pages SET title = ?, content = ?, status = ?, slug = ? WHERE id = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("ssssi", $title, $content, $status, $slug, $_POST['id']);
+    } else {
+        // Create new page
+        $sql = "INSERT INTO pages (title, content, status, slug) VALUES (?, ?, ?, ?)";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("ssss", $title, $content, $status, $slug);
+    }
+
+    if ($stmt->execute()) {
+        header('Location: pages.php');
+        exit();
+    } else {
+        $error = "Error saving page: " . $conn->error;
+    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -30,7 +62,7 @@ $result = $conn->query($sql);
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Posts Management - CMS</title>
+    <title><?php echo empty($page['id']) ? 'New Page' : 'Edit Page'; ?> - CMS</title>
 
     <!-- Google Font: Source Sans Pro -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
@@ -38,8 +70,8 @@ $result = $conn->query($sql);
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <!-- AdminLTE CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
-    <!-- DataTables -->
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.24/css/dataTables.bootstrap4.min.css">
+    <!-- Summernote -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-bs4.min.css">
 </head>
 <body class="hold-transition sidebar-mini">
 <div class="wrapper">
@@ -81,13 +113,13 @@ $result = $conn->query($sql);
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="posts.php" class="nav-link active">
+                        <a href="posts.php" class="nav-link">
                             <i class="nav-icon fas fa-file-alt"></i>
                             <p>Posts</p>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="pages.php" class="nav-link">
+                        <a href="pages.php" class="nav-link active">
                             <i class="nav-icon fas fa-file"></i>
                             <p>Pages</p>
                         </a>
@@ -118,12 +150,7 @@ $result = $conn->query($sql);
             <div class="container-fluid">
                 <div class="row mb-2">
                     <div class="col-sm-6">
-                        <h1 class="m-0">Posts Management</h1>
-                    </div>
-                    <div class="col-sm-6">
-                        <a href="post_edit.php" class="btn btn-primary float-right">
-                            <i class="fas fa-plus"></i> Add New Post
-                        </a>
+                        <h1 class="m-0"><?php echo empty($page['id']) ? 'New Page' : 'Edit Page'; ?></h1>
                     </div>
                 </div>
             </div>
@@ -134,42 +161,36 @@ $result = $conn->query($sql);
             <div class="container-fluid">
                 <div class="card">
                     <div class="card-body">
-                        <table id="posts-table" class="table table-bordered table-striped">
-                            <thead>
-                                <tr>
-                                    <th>Title</th>
-                                    <th>Author</th>
-                                    <th>Status</th>
-                                    <th>Created</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php while ($post = $result->fetch_assoc()): ?>
-                                <tr>
-                                    <td><?php echo htmlspecialchars($post['title']); ?></td>
-                                    <td><?php echo htmlspecialchars($post['author_name']); ?></td>
-                                    <td>
-                                        <span class="badge badge-<?php echo $post['status'] === 'published' ? 'success' : 'warning'; ?>">
-                                            <?php echo ucfirst($post['status']); ?>
-                                        </span>
-                                    </td>
-                                    <td><?php echo date('Y-m-d H:i', strtotime($post['created_at'])); ?></td>
-                                    <td>
-                                        <a href="post_edit.php?id=<?php echo $post['id']; ?>" class="btn btn-sm btn-info">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                        <form action="posts.php" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this post?');">
-                                            <input type="hidden" name="post_id" value="<?php echo $post['id']; ?>">
-                                            <button type="submit" name="delete_post" class="btn btn-sm btn-danger">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </form>
-                                    </td>
-                                </tr>
-                                <?php endwhile; ?>
-                            </tbody>
-                        </table>
+                        <?php if (isset($error)): ?>
+                            <div class="alert alert-danger"><?php echo $error; ?></div>
+                        <?php endif; ?>
+
+                        <form action="page_edit.php" method="post">
+                            <input type="hidden" name="id" value="<?php echo $page['id']; ?>">
+                            
+                            <div class="form-group">
+                                <label for="title">Title</label>
+                                <input type="text" class="form-control" id="title" name="title" value="<?php echo htmlspecialchars($page['title']); ?>" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="content">Content</label>
+                                <textarea class="form-control" id="content" name="content" rows="10"><?php echo htmlspecialchars($page['content']); ?></textarea>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="status">Status</label>
+                                <select class="form-control" id="status" name="status">
+                                    <option value="draft" <?php echo $page['status'] === 'draft' ? 'selected' : ''; ?>>Draft</option>
+                                    <option value="published" <?php echo $page['status'] === 'published' ? 'selected' : ''; ?>>Published</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <button type="submit" class="btn btn-primary">Save Page</button>
+                                <a href="pages.php" class="btn btn-default">Cancel</a>
+                            </div>
+                        </form>
                     </div>
                 </div>
             </div>
@@ -191,19 +212,21 @@ $result = $conn->query($sql);
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
 <!-- AdminLTE App -->
 <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
-<!-- DataTables -->
-<script src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/1.10.24/js/dataTables.bootstrap4.min.js"></script>
+<!-- Summernote -->
+<script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-bs4.min.js"></script>
 <script>
 $(document).ready(function() {
-    $('#posts-table').DataTable({
-        "paging": true,
-        "lengthChange": true,
-        "searching": true,
-        "ordering": true,
-        "info": true,
-        "autoWidth": false,
-        "responsive": true,
+    $('#content').summernote({
+        height: 300,
+        toolbar: [
+            ['style', ['style']],
+            ['font', ['bold', 'underline', 'clear']],
+            ['color', ['color']],
+            ['para', ['ul', 'ol', 'paragraph']],
+            ['table', ['table']],
+            ['insert', ['link', 'picture']],
+            ['view', ['fullscreen', 'codeview', 'help']]
+        ]
     });
 });
 </script>
