@@ -19,6 +19,16 @@ $user = $result->fetch_assoc();
 
 // Update session with user data
 $_SESSION['avatar'] = $user['avatar'];
+
+// Ambil jumlah posts
+$sql = "SELECT COUNT(*) as count FROM posts";
+$result = $conn->query($sql);
+$posts_count = $result->fetch_assoc()['count'];
+
+// Ambil jumlah pages
+$sql = "SELECT COUNT(*) as count FROM pages";
+$result = $conn->query($sql);
+$pages_count = $result->fetch_assoc()['count'];
 ?>
 
 <!DOCTYPE html>
@@ -26,249 +36,237 @@ $_SESSION['avatar'] = $user['avatar'];
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>CMS Dashboard</title>
+    <title>Simple CMS Dashboard</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:400,500,700&display=swap">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
         body {
             font-family: 'Roboto', sans-serif;
-            background: linear-gradient(120deg, #e3f2fd 0%, #bbdefb 100%);
-            min-height: 100vh;
+            background: #f4f8fb;
+            margin: 0;
         }
-        .main-header, .main-footer {
-            background: #1976d2 !important;
-            color: #fff !important;
-            border: none;
+        .topbar {
+            background: #1565c0;
+            color: #fff;
+            padding: 0 32px;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 8px rgba(25, 118, 210, 0.08);
         }
-        .main-sidebar {
-            background: #1565c0 !important;
-        }
-        .brand-link {
-            background: #1976d2 !important;
-            color: #fff !important;
+        .topbar .title {
+            font-size: 1.3rem;
             font-weight: 700;
             letter-spacing: 1px;
         }
-        .sidebar .user-panel {
-            /* background: #e3f2fd; */
-            background: transparent;
-            border-radius: 12px;
-            margin-bottom: 18px;
-            box-shadow: 0 2px 8px rgba(25, 118, 210, 0.08);
+        .topbar .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
-        .sidebar .user-panel .image img {
+        .topbar .user-info img {
+            width: 32px;
+            height: 32px;
             border-radius: 50%;
-            border: 2px solid #1976d2;
+            object-fit: cover;
+            border: 2px solid #fff;
         }
-        .sidebar .nav-link.active, .sidebar .nav-link:hover {
-            background: #1976d2 !important;
-            color: #fff !important;
-            border-radius: 8px;
+        .sidebar {
+            width: 240px;
+            background: #1976d2;
+            color: #fff;
+            min-height: 100vh;
+            float: left;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 24px;
         }
-        .sidebar .nav-link {
-            color: #e3f2fd !important;
-            font-weight: 500;
-            margin-bottom: 4px;
-            transition: background 0.2s;
-        }
-        .content-wrapper {
-            background: transparent;
-        }
-        .card, .small-box {
-            border-radius: 18px;
-            box-shadow: 0 4px 24px rgba(25, 118, 210, 0.10);
-            border: none;
-        }
-        .small-box {
-            background: #fff;
-            color: #1976d2;
-            transition: box-shadow 0.2s, transform 0.2s;
-        }
-        .small-box:hover {
-            box-shadow: 0 8px 32px rgba(25, 118, 210, 0.18);
-            transform: translateY(-2px) scale(1.03);
-        }
-        .small-box .icon {
-            color: #1976d2;
-            opacity: 0.2;
-        }
-        .small-box-footer {
-            color: #1976d2 !important;
-            font-weight: 500;
-        }
-        .main-footer {
-            background: #1976d2 !important;
-            color: #fff !important;
-            border-top: none;
-            border-radius: 0 0 18px 18px;
-        }
-        h1, h3, h2 {
-            color: #1976d2;
+        .sidebar .brand {
+            font-size: 1.2rem;
             font-weight: 700;
+            margin-bottom: 24px;
+            letter-spacing: 1px;
+        }
+        .sidebar .user-panel {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        .sidebar .user-panel img {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #fff;
+            margin-bottom: 8px;
+        }
+        .sidebar .user-panel .username {
+            color: #fff;
+            font-weight: 500;
+            font-size: 1.1rem;
+        }
+        .sidebar .menu {
+            width: 100%;
+        }
+        .sidebar .menu ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .sidebar .menu li {
+            width: 100%;
+        }
+        .sidebar .menu a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #fff;
+            text-decoration: none;
+            padding: 12px 32px;
+            font-size: 1rem;
+            border-left: 4px solid transparent;
+            transition: background 0.2s, border 0.2s;
+        }
+        .sidebar .menu a.active, .sidebar .menu a:hover {
+            background: #1565c0;
+            border-left: 4px solid #fff;
+        }
+        .main-content {
+            margin-left: 240px;
+            padding: 32px 40px 24px 40px;
+        }
+        .breadcrumb {
+            font-size: 0.95rem;
+            color: #888;
+            margin-bottom: 18px;
+        }
+        .dashboard-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1976d2;
+            margin-bottom: 24px;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+        .stat-card {
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 4px 16px rgba(25, 118, 210, 0.10);
+            padding: 28px 24px 20px 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            position: relative;
+            min-height: 120px;
+        }
+        .stat-card .stat-icon {
+            position: absolute;
+            top: 18px;
+            right: 18px;
+            font-size: 2.2rem;
+            opacity: 0.18;
+        }
+        .stat-card.posts { border-left: 6px solid #1976d2; }
+        .stat-card.pages { border-left: 6px solid #43a047; }
+        .stat-card.media { border-left: 6px solid #fbc02d; }
+        .stat-card.users { border-left: 6px solid #e53935; }
+        .stat-label {
+            font-size: 1.1rem;
+            color: #888;
+            margin-bottom: 6px;
+        }
+        .stat-value {
+            font-size: 2.1rem;
+            font-weight: 700;
+            color: #1976d2;
         }
         @media (max-width: 900px) {
-            .content-header h1 {
-                font-size: 1.5rem;
+            .main-content {
+                margin-left: 0;
+                padding: 16px 8px;
+            }
+            .sidebar {
+                width: 100%;
+                min-height: auto;
+                float: none;
+                flex-direction: row;
+                justify-content: space-between;
+                padding: 8px 0;
             }
         }
-        .sidebar .user-panel .info a {
-            color: #fff !important;
-        }
     </style>
-    <!-- AdminLTE CSS -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
 </head>
-<body class="hold-transition sidebar-mini">
-<div class="wrapper">
-    <!-- Navbar -->
-    <nav class="main-header navbar navbar-expand navbar-white navbar-light">
-        <!-- Left navbar links -->
-        <ul class="navbar-nav">
-            <li class="nav-item">
-                <a class="nav-link" data-widget="pushmenu" href="#" role="button"><i class="fas fa-bars"></i></a>
-            </li>
-        </ul>
-
-        <!-- Right navbar links -->
-        <ul class="navbar-nav ml-auto">
-            <li class="nav-item">
-                <a class="nav-link" href="logout.php">
-                    <i class="fas fa-sign-out-alt"></i> Logout
-                </a>
-            </li>
-        </ul>
-    </nav>
-
-    <!-- Main Sidebar Container -->
-    <aside class="main-sidebar sidebar-dark-primary elevation-4">
-        <!-- Brand Logo -->
-        <a href="index.php" class="brand-link">
-            <span class="brand-text font-weight-light">Simple CMS</span>
-        </a>
-
-        <!-- Sidebar -->
-        <div class="sidebar">
-            <!-- Sidebar user panel -->
-            <div class="user-panel mt-3 pb-3 mb-3 d-flex">
-                <div class="image">
-                    <img src="<?php echo !empty($user['avatar']) ? $user['avatar'] : 'https://via.placeholder.com/150'; ?>" class="img-circle elevation-2" alt="User Image">
-                </div>
-                <div class="info">
-                    <a href="profile.php" class="d-block"><?php echo htmlspecialchars($user['username']); ?></a>
-                </div>
-            </div>
-
-            <!-- Sidebar Menu -->
-            <nav class="mt-2">
-                <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu">
-                    <li class="nav-item">
-                        <a href="index.php" class="nav-link active">
-                            <i class="nav-icon fas fa-tachometer-alt"></i>
-                            <p>Dashboard</p>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="posts.php" class="nav-link">
-                            <i class="nav-icon fas fa-file-alt"></i>
-                            <p>Posts</p>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="pages.php" class="nav-link">
-                            <i class="nav-icon fas fa-file"></i>
-                            <p>Pages</p>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="media.php" class="nav-link">
-                            <i class="nav-icon fas fa-images"></i>
-                            <p>Media</p>
-                        </a>
-                    </li>
-                    <?php if ($user['role'] === 'admin'): ?>
-                    <li class="nav-item">
-                        <a href="users.php" class="nav-link">
-                            <i class="nav-icon fas fa-users"></i>
-                            <p>Users</p>
-                        </a>
-                    </li>
-                    <?php endif; ?>
-                </ul>
-            </nav>
+<body>
+    <div class="topbar">
+        <div class="title">Simple CMS</div>
+        <div class="user-info">
+            <img src="<?php echo !empty($user['avatar']) ? $user['avatar'] : 'https://via.placeholder.com/150'; ?>" alt="Avatar">
+            <span><?php echo htmlspecialchars($user['username']); ?></span>
+            <a href="logout.php" style="color:#fff;margin-left:12px;"><i class="fas fa-sign-out-alt"></i></a>
         </div>
-    </aside>
-
-    <!-- Content Wrapper -->
-    <div class="content-wrapper">
-        <!-- Content Header -->
-        <div class="content-header">
-            <div class="container-fluid">
-                <div class="row mb-2">
-                    <div class="col-sm-6">
-                        <h1 class="m-0">Dashboard</h1>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Main content -->
-        <section class="content">
-            <div class="container-fluid">
-                <!-- Small boxes (Stat box) -->
-                <div class="row">
-                    <div class="col-lg-3 col-6">
-                        <div class="small-box bg-info">
-                            <div class="inner">
-                                <?php
-                                $sql = "SELECT COUNT(*) as count FROM posts";
-                                $result = $conn->query($sql);
-                                $posts_count = $result->fetch_assoc()['count'];
-                                ?>
-                                <h3><?php echo $posts_count; ?></h3>
-                                <p>Posts</p>
-                            </div>
-                            <div class="icon">
-                                <i class="fas fa-file-alt"></i>
-                            </div>
-                            <a href="posts.php" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
-                        </div>
-                    </div>
-                    <div class="col-lg-3 col-6">
-                        <div class="small-box bg-success">
-                            <div class="inner">
-                                <?php
-                                $sql = "SELECT COUNT(*) as count FROM pages";
-                                $result = $conn->query($sql);
-                                $pages_count = $result->fetch_assoc()['count'];
-                                ?>
-                                <h3><?php echo $pages_count; ?></h3>
-                                <p>Pages</p>
-                            </div>
-                            <div class="icon">
-                                <i class="fas fa-file"></i>
-                            </div>
-                            <a href="pages.php" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
     </div>
-
-    <!-- Footer -->
-    <footer class="main-footer">
-        <div class="float-right d-none d-sm-block">
-            <b>Version</b> 1.0.0
+    <div class="sidebar">
+        <div class="brand">Simple CMS</div>
+        <div class="user-panel">
+            <img src="<?php echo !empty($user['avatar']) ? $user['avatar'] : 'https://via.placeholder.com/150'; ?>" alt="Avatar">
+            <div class="username"><?php echo htmlspecialchars($user['username']); ?></div>
         </div>
-        <strong>Copyright &copy; 2024 <a href="#">Simple CMS</a>.</strong> All rights reserved.
-    </footer>
-</div>
-
-<!-- jQuery -->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<!-- Bootstrap 4 -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
-<!-- AdminLTE App -->
-<script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
+        <nav class="menu">
+            <ul>
+                <li><a href="index.php" class="active"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+                <li><a href="profile.php"><i class="fas fa-user"></i> Profile</a></li>
+                <li><a href="posts.php"><i class="fas fa-file-alt"></i> Posts</a></li>
+                <li><a href="pages.php"><i class="fas fa-file"></i> Pages</a></li>
+                <li><a href="media.php"><i class="fas fa-images"></i> Media</a></li>
+                <?php if ($user['role'] === 'admin'): ?>
+                <li><a href="users.php"><i class="fas fa-users"></i> Users</a></li>
+                <?php endif; ?>
+            </ul>
+        </nav>
+    </div>
+    <div class="main-content">
+        <div class="breadcrumb">
+            <i class="fas fa-home"></i> Home &nbsp;>&nbsp; Dashboard
+        </div>
+        <div class="dashboard-title">Dashboard Control Panel</div>
+        <div class="stats-grid">
+            <div class="stat-card posts">
+                <div class="stat-label">Posts</div>
+                <div class="stat-value"><?php echo $posts_count; ?></div>
+                <div class="stat-icon"><i class="fas fa-file-alt"></i></div>
+            </div>
+            <div class="stat-card pages">
+                <div class="stat-label">Pages</div>
+                <div class="stat-value"><?php echo $pages_count; ?></div>
+                <div class="stat-icon"><i class="fas fa-file"></i></div>
+            </div>
+            <div class="stat-card media">
+                <div class="stat-label">Media</div>
+                <div class="stat-value"><?php
+                    $sql = "SELECT COUNT(*) as count FROM media";
+                    $result = $conn->query($sql);
+                    echo $result->fetch_assoc()['count'];
+                ?></div>
+                <div class="stat-icon"><i class="fas fa-images"></i></div>
+            </div>
+            <div class="stat-card users">
+                <div class="stat-label">Users</div>
+                <div class="stat-value"><?php
+                    $sql = "SELECT COUNT(*) as count FROM users";
+                    $result = $conn->query($sql);
+                    echo $result->fetch_assoc()['count'];
+                ?></div>
+                <div class="stat-icon"><i class="fas fa-users"></i></div>
+            </div>
+        </div>
+    </div>
 </body>
-</html> 
+</html>
+<?php exit; ?> 
