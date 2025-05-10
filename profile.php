@@ -130,310 +130,366 @@ $user = $result->fetch_assoc();
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Profile - SimpleCMS</title>
+    <title>Profile - Simple CMS</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:400,500,700&display=swap">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
         body {
             font-family: 'Roboto', sans-serif;
-            background: linear-gradient(120deg, #e3f2fd 0%, #bbdefb 100%);
-            min-height: 100vh;
+            background: #f4f8fb;
+            margin: 0;
         }
-        .main-header, .main-footer {
-            background: #1976d2 !important;
-            color: #fff !important;
-            border: none;
+        .topbar {
+            background: #1565c0;
+            color: #fff;
+            padding: 0 32px;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 8px rgba(25, 118, 210, 0.08);
         }
-        .main-sidebar {
-            background: #1565c0 !important;
-        }
-        .brand-link {
-            background: #1976d2 !important;
-            color: #fff !important;
+        .topbar .title {
+            font-size: 1.3rem;
             font-weight: 700;
             letter-spacing: 1px;
         }
-        .sidebar .user-panel {
-            /* background: #e3f2fd; */
-            background: transparent;
-            border-radius: 12px;
-            margin-bottom: 18px;
-            box-shadow: 0 2px 8px rgba(25, 118, 210, 0.08);
+        .topbar .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
-        .sidebar .user-panel .image img {
+        .topbar .user-info img {
+            width: 32px;
+            height: 32px;
             border-radius: 50%;
-            border: 2px solid #1976d2;
+            object-fit: cover;
+            border: 2px solid #fff;
         }
-        .sidebar .nav-link.active, .sidebar .nav-link:hover {
-            background: #1976d2 !important;
-            color: #fff !important;
-            border-radius: 8px;
+        .sidebar {
+            width: 240px;
+            background: #1976d2;
+            color: #fff;
+            min-height: 100vh;
+            float: left;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 24px;
         }
-        .sidebar .nav-link {
-            color: #e3f2fd !important;
+        .sidebar .brand {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 24px;
+            letter-spacing: 1px;
+        }
+        .sidebar .user-panel {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        .sidebar .user-panel img {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #fff;
+            margin-bottom: 8px;
+        }
+        .sidebar .user-panel .username {
+            color: #fff;
             font-weight: 500;
-            margin-bottom: 4px;
-            transition: background 0.2s;
+            font-size: 1.1rem;
         }
-        .content-wrapper {
-            background: transparent;
+        .sidebar .menu {
+            width: 100%;
         }
-        .card, .btn, .form-control, .custom-file-input, .custom-file-label, .note-editor {
-            border-radius: 18px !important;
-            box-shadow: 0 4px 24px rgba(25, 118, 210, 0.10);
-            border: none;
+        .sidebar .menu ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .sidebar .menu li {
+            width: 100%;
+        }
+        .sidebar .menu a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #fff;
+            text-decoration: none;
+            padding: 12px 32px;
+            font-size: 1rem;
+            border-left: 4px solid transparent;
+            transition: background 0.2s, border 0.2s;
+        }
+        .sidebar .menu a.active, .sidebar .menu a:hover {
+            background: #1565c0;
+            border-left: 4px solid #fff;
+        }
+        .main-content {
+            margin-left: 240px;
+            padding: 32px 40px 24px 40px;
+        }
+        .breadcrumb {
+            font-size: 0.95rem;
+            color: #888;
+            margin-bottom: 18px;
+        }
+        .page-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1976d2;
+            margin-bottom: 24px;
+        }
+        .card {
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 4px 16px rgba(25, 118, 210, 0.10);
+            padding: 28px 24px 20px 24px;
+            margin-bottom: 32px;
         }
         .btn-primary, .btn-success, .btn-danger, .btn-info {
             background: #1976d2;
             color: #fff;
             border: none;
             font-weight: 500;
+            border-radius: 8px;
             transition: background 0.2s;
+            padding: 8px 18px;
         }
         .btn-primary:hover, .btn-success:hover, .btn-danger:hover, .btn-info:hover {
             background: #1565c0;
         }
-        .main-footer {
-            background: #1976d2 !important;
-            color: #fff !important;
-            border-top: none;
-            border-radius: 0 0 18px 18px;
+        .form-group {
+            margin-bottom: 20px;
         }
-        h1, h3, h2 {
-            color: #1976d2;
-            font-weight: 700;
-        }
-        label {
-            color: #1976d2;
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
             font-weight: 500;
         }
-        .profile-image {
-            width: 150px;
-            height: 150px;
-            object-fit: cover;
-            border-radius: 50%;
-            border: 3px solid #fff;
-            box-shadow: 0 0 10px rgba(25, 118, 210, 0.15);
+        .form-control {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #e3f2fd;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+        .form-control:focus {
+            border-color: #1976d2;
+            outline: none;
+        }
+        .alert {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .alert-success {
+            background: #e8f5e9;
+            color: #2e7d32;
+            border: 1px solid #c8e6c9;
+        }
+        .alert-danger {
+            background: #ffebee;
+            color: #c62828;
+            border: 1px solid #ffcdd2;
         }
         .profile-image-container {
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 24px;
         }
-        .profile-image-container .btn {
-            margin-top: 10px;
+        .profile-image {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #1976d2;
+            margin-bottom: 16px;
+        }
+        .profile-username {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #1976d2;
+            margin-bottom: 8px;
+        }
+        .nav-pills {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+        .nav-pills .nav-link {
+            color: #666;
+            padding: 8px 16px;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+        .nav-pills .nav-link.active {
+            background: #1976d2;
+            color: #fff;
+        }
+        .tab-content {
+            padding: 20px 0;
         }
         @media (max-width: 900px) {
-            .content-header h1 {
-                font-size: 1.5rem;
+            .main-content {
+                margin-left: 0;
+                padding: 16px 8px;
+            }
+            .sidebar {
+                width: 100%;
+                min-height: auto;
+                float: none;
+                flex-direction: row;
+                justify-content: space-between;
+                padding: 8px 0;
             }
         }
-        .sidebar .user-panel .info a {
-            color: #fff !important;
-        }
     </style>
-    <!-- AdminLTE CSS -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
 </head>
-<body class="hold-transition sidebar-mini">
-<div class="wrapper">
-    <!-- Navbar -->
-    <nav class="main-header navbar navbar-expand navbar-white navbar-light">
-        <ul class="navbar-nav">
-            <li class="nav-item">
-                <a class="nav-link" data-widget="pushmenu" href="#" role="button"><i class="fas fa-bars"></i></a>
-            </li>
-        </ul>
-        <ul class="navbar-nav ml-auto">
-            <li class="nav-item">
-                <a class="nav-link" href="logout.php">
-                    <i class="fas fa-sign-out-alt"></i> Logout
-                </a>
-            </li>
-        </ul>
-    </nav>
-
-    <!-- Main Sidebar Container -->
-    <aside class="main-sidebar sidebar-dark-primary elevation-4">
-        <a href="index.php" class="brand-link">
-            <span class="brand-text font-weight-light">SimpleCMS</span>
-        </a>
-
-        <div class="sidebar">
-            <div class="user-panel mt-3 pb-3 mb-3 d-flex">
-                <div class="image">
-                    <img src="<?php echo isset($user['avatar']) && $user['avatar'] ? $user['avatar'] : 'https://via.placeholder.com/150'; ?>" class="img-circle elevation-2" alt="User Image">
-                </div>
-                <div class="info">
-                    <a href="profile.php" class="d-block"><?php echo htmlspecialchars($user['username']); ?></a>
-                </div>
-            </div>
-
-            <nav class="mt-2">
-                <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu">
-                    <li class="nav-item">
-                        <a href="index.php" class="nav-link">
-                            <i class="nav-icon fas fa-tachometer-alt"></i>
-                            <p>Dashboard</p>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="posts.php" class="nav-link">
-                            <i class="nav-icon fas fa-file-alt"></i>
-                            <p>Posts</p>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="pages.php" class="nav-link">
-                            <i class="nav-icon fas fa-copy"></i>
-                            <p>Pages</p>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="media.php" class="nav-link">
-                            <i class="nav-icon fas fa-images"></i>
-                            <p>Media</p>
-                        </a>
-                    </li>
-                    <?php if ($_SESSION['role'] === 'admin'): ?>
-                    <li class="nav-item">
-                        <a href="users.php" class="nav-link">
-                            <i class="nav-icon fas fa-users"></i>
-                            <p>Users</p>
-                        </a>
-                    </li>
-                    <?php endif; ?>
-                </ul>
-            </nav>
+<body>
+    <div class="topbar">
+        <div class="title">Simple CMS</div>
+        <div class="user-info">
+            <img src="<?php echo !empty($user['avatar']) ? $user['avatar'] : 'https://via.placeholder.com/150'; ?>" alt="Avatar">
+            <span><?php echo htmlspecialchars($user['username']); ?></span>
+            <a href="logout.php" style="color:#fff;margin-left:12px;"><i class="fas fa-sign-out-alt"></i></a>
         </div>
-    </aside>
-
-    <!-- Content Wrapper -->
-    <div class="content-wrapper">
-        <div class="content-header">
-            <div class="container-fluid">
-                <div class="row mb-2">
-                    <div class="col-sm-6">
-                        <h1 class="m-0">Profile</h1>
-                    </div>
-                </div>
-            </div>
+    </div>
+    <div class="sidebar">
+        <div class="brand">Simple CMS</div>
+        <div class="user-panel">
+            <img src="<?php echo !empty($user['avatar']) ? $user['avatar'] : 'https://via.placeholder.com/150'; ?>" alt="Avatar">
+            <div class="username"><?php echo htmlspecialchars($user['username']); ?></div>
         </div>
-
-        <div class="content">
-            <div class="container-fluid">
-                <?php if ($success_message): ?>
-                    <div class="alert alert-success alert-dismissible">
-                        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-                        <?php echo $success_message; ?>
-                    </div>
+        <nav class="menu">
+            <ul>
+                <li><a href="index.php"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+                <li><a href="profile.php" class="active"><i class="fas fa-user"></i> Profile</a></li>
+                <li><a href="posts.php"><i class="fas fa-file-alt"></i> Posts</a></li>
+                <li><a href="pages.php"><i class="fas fa-file"></i> Pages</a></li>
+                <li><a href="media.php"><i class="fas fa-images"></i> Media</a></li>
+                <?php if ($user['role'] === 'admin'): ?>
+                <li><a href="users.php"><i class="fas fa-users"></i> Users</a></li>
                 <?php endif; ?>
+            </ul>
+        </nav>
+    </div>
+    <div class="main-content">
+        <div class="breadcrumb">
+            <i class="fas fa-home"></i> Home &nbsp;>&nbsp; Profile
+        </div>
+        <div class="page-title">Profile</div>
 
-                <?php if ($error_message): ?>
-                    <div class="alert alert-danger alert-dismissible">
-                        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-                        <?php echo $error_message; ?>
-                    </div>
-                <?php endif; ?>
+        <?php if ($success_message): ?>
+            <div class="alert alert-success">
+                <?php echo $success_message; ?>
+            </div>
+        <?php endif; ?>
 
-                <div class="row">
-                    <div class="col-md-4">
-                        <div class="card card-primary card-outline">
-                            <div class="card-body box-profile">
-                                <div class="profile-image-container">
-                                    <img class="profile-image" src="<?php echo isset($user['avatar']) && $user['avatar'] ? $user['avatar'] : 'https://via.placeholder.com/150'; ?>" alt="Profile Image">
-                                    <form action="profile.php" method="post" enctype="multipart/form-data" class="mt-2">
-                                        <div class="custom-file">
-                                            <input type="file" class="custom-file-input" id="avatar" name="avatar" accept="image/*">
-                                            <label class="btn btn-primary btn-sm" for="avatar">
-                                                <i class="fas fa-camera"></i> Change Photo
-                                            </label>
-                                        </div>
-                                        <button type="submit" name="update_profile" class="btn btn-success btn-sm mt-2">
-                                            <i class="fas fa-save"></i> Save Photo
-                                        </button>
-                                    </form>
-                                </div>
-                                <h3 class="profile-username text-center"><?php echo htmlspecialchars($user['first_name'] . ' ' . $user['last_name']); ?></h3>
-                                <p class="text-muted text-center"><?php echo htmlspecialchars($user['role']); ?></p>
+        <?php if ($error_message): ?>
+            <div class="alert alert-danger">
+                <?php echo $error_message; ?>
+            </div>
+        <?php endif; ?>
+
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="profile-image-container">
+                        <img class="profile-image" src="<?php echo !empty($user['avatar']) ? $user['avatar'] : 'https://via.placeholder.com/150'; ?>" alt="Profile Image">
+                        <form action="profile.php" method="post" enctype="multipart/form-data">
+                            <div class="form-group">
+                                <input type="file" class="form-control" id="avatar" name="avatar" accept="image/*">
                             </div>
+                            <button type="submit" name="update_profile" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Update Photo
+                            </button>
+                        </form>
+                    </div>
+                    <h3 class="profile-username text-center"><?php echo htmlspecialchars($user['first_name'] . ' ' . $user['last_name']); ?></h3>
+                    <p class="text-center" style="color:#666;"><?php echo htmlspecialchars($user['role']); ?></p>
+                </div>
+            </div>
+
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="nav-pills">
+                        <a href="#profile" class="nav-link active" data-toggle="tab">Profile</a>
+                        <a href="#password" class="nav-link" data-toggle="tab">Change Password</a>
+                    </div>
+                    <div class="tab-content">
+                        <div class="tab-pane active" id="profile">
+                            <form action="profile.php" method="post">
+                                <div class="form-group">
+                                    <label for="username">Username</label>
+                                    <input type="text" class="form-control" id="username" value="<?php echo htmlspecialchars($user['username']); ?>" disabled>
+                                </div>
+                                <div class="form-group">
+                                    <label for="first_name">First Name</label>
+                                    <input type="text" class="form-control" id="first_name" name="first_name" value="<?php echo htmlspecialchars($user['first_name']); ?>">
+                                </div>
+                                <div class="form-group">
+                                    <label for="last_name">Last Name</label>
+                                    <input type="text" class="form-control" id="last_name" name="last_name" value="<?php echo htmlspecialchars($user['last_name']); ?>">
+                                </div>
+                                <div class="form-group">
+                                    <label for="email">Email</label>
+                                    <input type="email" class="form-control" id="email" name="email" value="<?php echo htmlspecialchars($user['email']); ?>">
+                                </div>
+                                <div class="form-group">
+                                    <label for="bio">Bio</label>
+                                    <textarea class="form-control" id="bio" name="bio" rows="4"><?php echo htmlspecialchars($user['bio']); ?></textarea>
+                                </div>
+                                <button type="submit" name="update_profile" class="btn btn-primary">
+                                    <i class="fas fa-save"></i> Update Profile
+                                </button>
+                            </form>
                         </div>
-                    </div>
 
-                    <div class="col-md-8">
-                        <div class="card">
-                            <div class="card-header p-2">
-                                <ul class="nav nav-pills">
-                                    <li class="nav-item"><a class="nav-link active" href="#profile" data-toggle="tab">Profile</a></li>
-                                    <li class="nav-item"><a class="nav-link" href="#password" data-toggle="tab">Change Password</a></li>
-                                </ul>
-                            </div>
-                            <div class="card-body">
-                                <div class="tab-content">
-                                    <div class="active tab-pane" id="profile">
-                                        <form action="profile.php" method="post">
-                                            <div class="form-group">
-                                                <label for="username">Username</label>
-                                                <input type="text" class="form-control" id="username" value="<?php echo htmlspecialchars($user['username']); ?>" disabled>
-                                            </div>
-                                            <div class="form-group">
-                                                <label for="first_name">First Name</label>
-                                                <input type="text" class="form-control" id="first_name" name="first_name" value="<?php echo htmlspecialchars($user['first_name']); ?>">
-                                            </div>
-                                            <div class="form-group">
-                                                <label for="last_name">Last Name</label>
-                                                <input type="text" class="form-control" id="last_name" name="last_name" value="<?php echo htmlspecialchars($user['last_name']); ?>">
-                                            </div>
-                                            <div class="form-group">
-                                                <label for="email">Email</label>
-                                                <input type="email" class="form-control" id="email" name="email" value="<?php echo htmlspecialchars($user['email']); ?>">
-                                            </div>
-                                            <div class="form-group">
-                                                <label for="bio">Bio</label>
-                                                <textarea class="form-control" id="bio" name="bio" rows="4"><?php echo htmlspecialchars($user['bio']); ?></textarea>
-                                            </div>
-                                            <button type="submit" name="update_profile" class="btn btn-primary">Update Profile</button>
-                                        </form>
-                                    </div>
-
-                                    <div class="tab-pane" id="password">
-                                        <form action="profile.php" method="post">
-                                            <div class="form-group">
-                                                <label for="current_password">Current Password</label>
-                                                <input type="password" class="form-control" id="current_password" name="current_password" required>
-                                            </div>
-                                            <div class="form-group">
-                                                <label for="new_password">New Password</label>
-                                                <input type="password" class="form-control" id="new_password" name="new_password" required>
-                                            </div>
-                                            <div class="form-group">
-                                                <label for="confirm_password">Confirm New Password</label>
-                                                <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
-                                            </div>
-                                            <button type="submit" name="change_password" class="btn btn-primary">Change Password</button>
-                                        </form>
-                                    </div>
+                        <div class="tab-pane" id="password">
+                            <form action="profile.php" method="post">
+                                <div class="form-group">
+                                    <label for="current_password">Current Password</label>
+                                    <input type="password" class="form-control" id="current_password" name="current_password" required>
                                 </div>
-                            </div>
+                                <div class="form-group">
+                                    <label for="new_password">New Password</label>
+                                    <input type="password" class="form-control" id="new_password" name="new_password" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="confirm_password">Confirm New Password</label>
+                                    <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+                                </div>
+                                <button type="submit" name="change_password" class="btn btn-primary">
+                                    <i class="fas fa-key"></i> Change Password
+                                </button>
+                            </form>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
 
-<!-- jQuery -->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<!-- Bootstrap 4 -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
-<!-- AdminLTE App -->
-<script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
-<!-- bs-custom-file-input -->
-<script src="https://cdn.jsdelivr.net/npm/bs-custom-file-input/dist/bs-custom-file-input.min.js"></script>
-<script>
-$(document).ready(function () {
-    bsCustomFileInput.init();
-});
-</script>
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Bootstrap 4 -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Handle tab switching
+            $('.nav-link').click(function(e) {
+                e.preventDefault();
+                $('.nav-link').removeClass('active');
+                $(this).addClass('active');
+                $('.tab-pane').removeClass('active');
+                $($(this).attr('href')).addClass('active');
+            });
+        });
+    </script>
 </body>
 </html> 

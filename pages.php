@@ -8,6 +8,15 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 
+// Get user information
+$user_id = $_SESSION['user_id'];
+$sql = "SELECT * FROM users WHERE id = ?";
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("i", $user_id);
+$stmt->execute();
+$resultUser = $stmt->get_result();
+$user = $resultUser->fetch_assoc();
+
 // Handle page deletion
 if (isset($_POST['delete_page'])) {
     $page_id = $_POST['page_id'];
@@ -27,265 +36,235 @@ $result = $conn->query($sql);
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Pages - SimpleCMS</title>
+    <title>Pages - Simple CMS</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:400,500,700&display=swap">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
         body {
             font-family: 'Roboto', sans-serif;
-            background: linear-gradient(120deg, #e3f2fd 0%, #bbdefb 100%);
-            min-height: 100vh;
+            background: #f4f8fb;
+            margin: 0;
         }
-        .main-header, .main-footer {
-            background: #1976d2 !important;
-            color: #fff !important;
-            border: none;
+        .topbar {
+            background: #1565c0;
+            color: #fff;
+            padding: 0 32px;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 8px rgba(25, 118, 210, 0.08);
         }
-        .main-sidebar {
-            background: #1565c0 !important;
-        }
-        .brand-link {
-            background: #1976d2 !important;
-            color: #fff !important;
+        .topbar .title {
+            font-size: 1.3rem;
             font-weight: 700;
             letter-spacing: 1px;
         }
-        .sidebar .user-panel {
-            background: #e3f2fd;
-            border-radius: 12px;
-            margin-bottom: 18px;
-            box-shadow: 0 2px 8px rgba(25, 118, 210, 0.08);
+        .topbar .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
-        .sidebar .user-panel .image img {
+        .topbar .user-info img {
+            width: 32px;
+            height: 32px;
             border-radius: 50%;
-            border: 2px solid #1976d2;
+            object-fit: cover;
+            border: 2px solid #fff;
         }
-        .sidebar .nav-link.active, .sidebar .nav-link:hover {
-            background: #1976d2 !important;
-            color: #fff !important;
-            border-radius: 8px;
+        .sidebar {
+            width: 240px;
+            background: #1976d2;
+            color: #fff;
+            min-height: 100vh;
+            float: left;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 24px;
         }
-        .sidebar .nav-link {
-            color: #e3f2fd !important;
+        .sidebar .brand {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 24px;
+            letter-spacing: 1px;
+        }
+        .sidebar .user-panel {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        .sidebar .user-panel img {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #fff;
+            margin-bottom: 8px;
+        }
+        .sidebar .user-panel .username {
+            color: #fff;
             font-weight: 500;
-            margin-bottom: 4px;
-            transition: background 0.2s;
+            font-size: 1.1rem;
         }
-        .content-wrapper {
-            background: transparent;
+        .sidebar .menu {
+            width: 100%;
         }
-        .card, .table, .btn {
-            border-radius: 18px !important;
-            box-shadow: 0 4px 24px rgba(25, 118, 210, 0.10);
-            border: none;
+        .sidebar .menu ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .sidebar .menu li {
+            width: 100%;
+        }
+        .sidebar .menu a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #fff;
+            text-decoration: none;
+            padding: 12px 32px;
+            font-size: 1rem;
+            border-left: 4px solid transparent;
+            transition: background 0.2s, border 0.2s;
+        }
+        .sidebar .menu a.active, .sidebar .menu a:hover {
+            background: #1565c0;
+            border-left: 4px solid #fff;
+        }
+        .main-content {
+            margin-left: 240px;
+            padding: 32px 40px 24px 40px;
+        }
+        .breadcrumb {
+            font-size: 0.95rem;
+            color: #888;
+            margin-bottom: 18px;
+        }
+        .page-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1976d2;
+            margin-bottom: 24px;
+        }
+        .card {
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 4px 16px rgba(25, 118, 210, 0.10);
+            padding: 28px 24px 20px 24px;
+            margin-bottom: 32px;
         }
         .btn-primary, .btn-success, .btn-danger, .btn-info {
             background: #1976d2;
             color: #fff;
             border: none;
             font-weight: 500;
+            border-radius: 8px;
             transition: background 0.2s;
+            padding: 8px 18px;
         }
         .btn-primary:hover, .btn-success:hover, .btn-danger:hover, .btn-info:hover {
             background: #1565c0;
         }
-        .main-footer {
-            background: #1976d2 !important;
-            color: #fff !important;
-            border-top: none;
-            border-radius: 0 0 18px 18px;
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 12px;
         }
-        h1, h3, h2 {
-            color: #1976d2;
-            font-weight: 700;
+        th, td {
+            padding: 12px 10px;
+            text-align: left;
         }
-        .table thead th {
+        th {
             background: #1976d2;
             color: #fff;
             border: none;
         }
-        .table tbody tr {
+        tr {
             background: #fff;
             transition: box-shadow 0.2s;
         }
-        .table tbody tr:hover {
+        tr:hover {
             box-shadow: 0 4px 16px rgba(25, 118, 210, 0.08);
         }
         @media (max-width: 900px) {
-            .content-header h1 {
-                font-size: 1.5rem;
+            .main-content {
+                margin-left: 0;
+                padding: 16px 8px;
+            }
+            .sidebar {
+                width: 100%;
+                min-height: auto;
+                float: none;
+                flex-direction: row;
+                justify-content: space-between;
+                padding: 8px 0;
             }
         }
     </style>
-    <!-- AdminLTE CSS -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.25/css/dataTables.bootstrap4.min.css">
 </head>
-<body class="hold-transition sidebar-mini">
-<div class="wrapper">
-    <!-- Navbar -->
-    <nav class="main-header navbar navbar-expand navbar-white navbar-light">
-        <!-- Left navbar links -->
-        <ul class="navbar-nav">
-            <li class="nav-item">
-                <a class="nav-link" data-widget="pushmenu" href="#" role="button"><i class="fas fa-bars"></i></a>
-            </li>
-        </ul>
-
-        <!-- Right navbar links -->
-        <ul class="navbar-nav ml-auto">
-            <li class="nav-item">
-                <a class="nav-link" href="logout.php">
-                    <i class="fas fa-sign-out-alt"></i> Logout
-                </a>
-            </li>
-        </ul>
-    </nav>
-
-    <!-- Main Sidebar Container -->
-    <aside class="main-sidebar sidebar-dark-primary elevation-4">
-        <!-- Brand Logo -->
-        <a href="index.php" class="brand-link">
-            <span class="brand-text font-weight-light">Simple CMS</span>
-        </a>
-
-        <!-- Sidebar -->
-        <div class="sidebar">
-            <!-- Sidebar Menu -->
-            <nav class="mt-2">
-                <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu">
-                    <li class="nav-item">
-                        <a href="index.php" class="nav-link">
-                            <i class="nav-icon fas fa-tachometer-alt"></i>
-                            <p>Dashboard</p>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="posts.php" class="nav-link">
-                            <i class="nav-icon fas fa-file-alt"></i>
-                            <p>Posts</p>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="pages.php" class="nav-link active">
-                            <i class="nav-icon fas fa-file"></i>
-                            <p>Pages</p>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="media.php" class="nav-link">
-                            <i class="nav-icon fas fa-images"></i>
-                            <p>Media</p>
-                        </a>
-                    </li>
-                    <?php if ($_SESSION['role'] === 'admin'): ?>
-                    <li class="nav-item">
-                        <a href="users.php" class="nav-link">
-                            <i class="nav-icon fas fa-users"></i>
-                            <p>Users</p>
-                        </a>
-                    </li>
-                    <?php endif; ?>
-                </ul>
-            </nav>
+<body>
+    <div class="topbar">
+        <div class="title">Simple CMS</div>
+        <div class="user-info">
+            <img src="<?php echo !empty($user['avatar']) ? $user['avatar'] : 'https://via.placeholder.com/150'; ?>" alt="Avatar">
+            <span><?php echo htmlspecialchars($user['username']); ?></span>
+            <a href="logout.php" style="color:#fff;margin-left:12px;"><i class="fas fa-sign-out-alt"></i></a>
         </div>
-    </aside>
-
-    <!-- Content Wrapper -->
-    <div class="content-wrapper">
-        <!-- Content Header -->
-        <div class="content-header">
-            <div class="container-fluid">
-                <div class="row mb-2">
-                    <div class="col-sm-6">
-                        <h1 class="m-0">Pages Management</h1>
-                    </div>
-                    <div class="col-sm-6">
-                        <a href="page_edit.php" class="btn btn-primary float-right">
-                            <i class="fas fa-plus"></i> Add New Page
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Main content -->
-        <section class="content">
-            <div class="container-fluid">
-                <div class="card">
-                    <div class="card-body">
-                        <table id="pages-table" class="table table-bordered table-striped">
-                            <thead>
-                                <tr>
-                                    <th>Title</th>
-                                    <th>Slug</th>
-                                    <th>Status</th>
-                                    <th>Created</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php while ($page = $result->fetch_assoc()): ?>
-                                <tr>
-                                    <td><?php echo htmlspecialchars($page['title']); ?></td>
-                                    <td><?php echo htmlspecialchars($page['slug']); ?></td>
-                                    <td>
-                                        <span class="badge badge-<?php echo $page['status'] === 'published' ? 'success' : 'warning'; ?>">
-                                            <?php echo ucfirst($page['status']); ?>
-                                        </span>
-                                    </td>
-                                    <td><?php echo date('Y-m-d H:i', strtotime($page['created_at'])); ?></td>
-                                    <td>
-                                        <a href="page_edit.php?id=<?php echo $page['id']; ?>" class="btn btn-sm btn-info">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                        <form action="pages.php" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this page?');">
-                                            <input type="hidden" name="page_id" value="<?php echo $page['id']; ?>">
-                                            <button type="submit" name="delete_page" class="btn btn-sm btn-danger">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </form>
-                                    </td>
-                                </tr>
-                                <?php endwhile; ?>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </section>
     </div>
-
-    <!-- Footer -->
-    <footer class="main-footer">
-        <div class="float-right d-none d-sm-block">
-            <b>Version</b> 1.0.0
+    <div class="sidebar">
+        <div class="brand">Simple CMS</div>
+        <div class="user-panel">
+            <img src="<?php echo !empty($user['avatar']) ? $user['avatar'] : 'https://via.placeholder.com/150'; ?>" alt="Avatar">
+            <div class="username"><?php echo htmlspecialchars($user['username']); ?></div>
         </div>
-        <strong>Copyright &copy; 2024 <a href="#">Simple CMS</a>.</strong> All rights reserved.
-    </footer>
-</div>
-
-<!-- jQuery -->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<!-- Bootstrap 4 -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
-<!-- AdminLTE App -->
-<script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
-<!-- DataTables -->
-<script src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/1.10.24/js/dataTables.bootstrap4.min.js"></script>
-<script>
-$(document).ready(function() {
-    $('#pages-table').DataTable({
-        "paging": true,
-        "lengthChange": true,
-        "searching": true,
-        "ordering": true,
-        "info": true,
-        "autoWidth": false,
-        "responsive": true,
-    });
-});
-</script>
+        <nav class="menu">
+            <ul>
+                <li><a href="index.php"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+                <li><a href="posts.php"><i class="fas fa-file-alt"></i> Posts</a></li>
+                <li><a href="pages.php" class="active"><i class="fas fa-file"></i> Pages</a></li>
+                <li><a href="media.php"><i class="fas fa-images"></i> Media</a></li>
+                <?php if ($user['role'] === 'admin'): ?>
+                <li><a href="users.php"><i class="fas fa-users"></i> Users</a></li>
+                <?php endif; ?>
+            </ul>
+        </nav>
+    </div>
+    <div class="main-content">
+        <div class="breadcrumb">
+            <i class="fas fa-home"></i> Home &nbsp;>&nbsp; Pages
+        </div>
+        <div class="page-title">Pages</div>
+        <div class="card">
+            <a href="add_page.php" class="btn btn-primary" style="margin-bottom:18px;"><i class="fas fa-plus"></i> Add Page</a>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Created At</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                <?php while ($row = $result->fetch_assoc()): ?>
+                    <tr>
+                        <td><?php echo htmlspecialchars($row['title']); ?></td>
+                        <td><?php echo htmlspecialchars($row['created_at']); ?></td>
+                        <td>
+                            <a href="edit_page.php?id=<?php echo $row['id']; ?>" class="btn btn-info btn-sm"><i class="fas fa-edit"></i></a>
+                            <form action="pages.php" method="post" style="display:inline;">
+                                <input type="hidden" name="page_id" value="<?php echo $row['id']; ?>">
+                                <button type="submit" name="delete_page" class="btn btn-danger btn-sm" onclick="return confirm('Delete this page?')"><i class="fas fa-trash"></i></button>
+                            </form>
+                        </td>
+                    </tr>
+                <?php endwhile; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
 </body>
-</html> 
+</html>
+<?php exit; ?> 
